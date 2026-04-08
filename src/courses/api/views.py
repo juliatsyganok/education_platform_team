@@ -8,7 +8,7 @@ from .serializers import *
 from ..models import *
 from ..filters import *
 
-class CourseViewSet(ReadOnlyModelViewSet): #DRF джанги сам делает urls капец умный
+class CourseViewSet(ReadOnlyModelViewSet):
     quieryset=Course.objects.all()
     permissionclasses=[AllowAny]
 
@@ -36,24 +36,31 @@ class LessonsViewSet(ReadOnlyModelViewSet):
         return LessonSerializer
 
 
-class UserProfileViewSet(ReadOnlyModelViewSet):
-    queryset=UserProfile.objects.all()
+class UserProfileViewSet(ModelViewSet):
+    queryset = UserProfile.objects.all()
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'patch', 'head', 'options']
 
     def get_serializer_class(self):
-        if self.action=='list':
-            return UserProfileSerializer
         return UserProfileSerializer
+    
+    def get_queryset(self):
+        if self.action in ['list', 'retrieve']:
+            return UserProfile.objects.all()
+        return UserProfile.objects.filter(user=self.request.user)
     
 
 class EnrollmentViewSet(ModelViewSet):
     queryset=Enrollment.objects.all()
-    # serializer_class = EnrollmentCreateSerializer
     permission_classes=[IsAuthenticated]
 
     def get_serializer_class(self):
         if self.action=='create':
             return EnrollmentCreateSerializer
         return EnrollmentListSerializer
+
+    def get_queryset(self):
+        return Enrollment.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
