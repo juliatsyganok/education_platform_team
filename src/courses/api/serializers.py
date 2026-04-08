@@ -15,7 +15,7 @@ class LessonSerializer(serializers.ModelSerializer):
     
     def validate_content(self, value):
         if not value.strip():
-            raise serializers.ValidationError("Контент урока не может быть пустым")
+            raise serializers.ValidationError("Урок не может быть пустым")
         return value
     
     def validate_order(self, value):
@@ -26,7 +26,7 @@ class LessonSerializer(serializers.ModelSerializer):
             if instance_id:
                 exists = exists.exclude(id=instance_id)
             if exists.exists():
-                raise serializers.ValidationError(f"Урок с порядковым номером {value} уже существует в этом курсе")
+                raise serializers.ValidationError(f"Урок с номером {value} уже существует в этом курсе")
         return value
 
 
