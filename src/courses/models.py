@@ -153,3 +153,34 @@ class Enrollment(models.Model):
             raise ValidationError({
                 'user': 'Автор курса не может записаться'
             })
+        
+class LessonProgress(models.Model):
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='lesson_progress',
+        verbose_name="Студент"
+    )
+    lesson = models.ForeignKey(
+        'Lesson', 
+        on_delete=models.CASCADE, 
+        related_name='progress_records',
+        verbose_name="Урок"
+    )
+    is_completed = models.BooleanField(
+        default=False, 
+        verbose_name="Пройден"
+    )
+    completed_at = models.DateTimeField(
+        auto_now_add=True, 
+        verbose_name="Дата прохождения"
+    )
+
+    class Meta:
+        unique_together = ('user', 'lesson')
+        verbose_name = "Прогресс урока"
+        verbose_name_plural = "Прогресс уроков"
+
+    def __str__(self):
+        status = "Пройден" if self.is_completed else "В процессе"
+        return f"{self.user.username} - {self.lesson.name}: {status}"
