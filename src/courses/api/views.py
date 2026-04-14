@@ -1,39 +1,48 @@
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters as f
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
+
+from ..services.course_progress import complete_lesson_service, get_course_progress
+
 from .serializers import *
 from ..models import *
 from ..filters import *
 
 class CourseViewSet(ReadOnlyModelViewSet):
-    quieryset=Course.objects.all()
-    permissionclasses=[AllowAny]
-
-    filter_backends = [DjangoFilterBackend, f.SearchFilter,]
+    queryset = Course.objects.all()
+    permission_classes = [AllowAny]
+    filter_backends = [DjangoFilterBackend, f.SearchFilter]
     filterset_class = CoursesFilter
     search_fields = ['title']
 
     def get_queryset(self):
-        if self.action=='list':
-            return self.quieryset.filter(published=True)
-        return self.quieryset
+        if self.action == 'list':
+            return self.queryset.filter(published=True)
+        return self.queryset
 
     def get_serializer_class(self):
-        if self.action=='list':
+        if self.action == 'list':
             return CourseListSerializer
         return CourseDetailSerializer
 
 
 class LessonsViewSet(ReadOnlyModelViewSet):
-    queryset=Lesson.objects.all()
+    queryset = Lesson.objects.all()
+    permission_classes = [IsAuthenticated] 
 
     def get_serializer_class(self):
-        if self.action=='list':
-            return LessonSerializer
         return LessonSerializer
+
+    @action(detail=True, methods=['post'])
+    def complete(self, request, pk=None):
+        try:
+            complete_lesson_service(user=request.user, lesson_id=pk)
+            return Response({"status": "success", "message": "Урок пройден"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
 
 
 class UserProfileViewSet(ModelViewSet):
@@ -51,11 +60,11 @@ class UserProfileViewSet(ModelViewSet):
     
 
 class EnrollmentViewSet(ModelViewSet):
-    queryset=Enrollment.objects.all()
-    permission_classes=[IsAuthenticated]
+    queryset = Enrollment.objects.all()
+    permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
-        if self.action=='create':
+        if self.action == 'create':
             return EnrollmentCreateSerializer
         return EnrollmentListSerializer
 
@@ -65,7 +74,11 @@ class EnrollmentViewSet(ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-    # def create(self, request, *args, **kwargs):
-    #     user_id=self.request.user.id 
-    #     instance=self.get_object()
-    #     serializer=self.get_serializer(instance, data=request.data)
+    @action(detail=True, methods=['get'])
+    def progress(self, request, pk=None):
+        enrollment = self.get_object()
+        try:
+            data = get_course_progress(user=request.user, course=enrollment.course)
+            return Response(data)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
