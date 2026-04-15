@@ -45,25 +45,17 @@ class CourseListSerializer(serializers.ModelSerializer):
 class CourseDetailSerializer(serializers.ModelSerializer):
     lessons = LessonSerializer(many=True, read_only=True)
     author = serializers.CharField(source='author.user.username', read_only=True)
-    
+    enrollment_url = serializers.SerializerMethodField()  # 👈 добавить
+
     class Meta:
         model = Course
-        fields = ['id', 'title', 'description', 'price', 'created_at', 'published', 'author', 'lessons']
-    
-    def validate_title(self, value):
-        if len(value.strip()) < 5:
-            raise serializers.ValidationError("Название должно быть не менее 5 символов")
-        return value
-    
-    def validate_description(self, value):
-        if len(value.strip()) < 50:
-            raise serializers.ValidationError(f"Описание должно быть не менее 50 символов")
-        return value
-    
-    def validate_price(self, value):
-        if value < 0:
-            raise serializers.ValidationError("Цена не может быть отрицательной")
-        return value
+        fields = ['id', 'title', 'description', 'price', 'created_at', 'published', 'author', 'lessons', 'enrollment_url']
+
+    def get_enrollment_url(self, obj):
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri('/api/enrollments/')
+        return '/api/enrollments/'
 
 
 class UserProfileSerializer(serializers.ModelSerializer):

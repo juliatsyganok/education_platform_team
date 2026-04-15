@@ -2,8 +2,10 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters as f
+from ..services.PaymentService import PaymentService 
 
 from ..services.course_progress import complete_lesson_service, get_course_progress
 
@@ -72,7 +74,16 @@ class EnrollmentViewSet(ModelViewSet):
         return Enrollment.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        user = self.request.user
+        course = serializer.validated_data['course']
+    
+        payment_success = PaymentService.make_a_payment(float(course.price))
+    
+        if not payment_success:
+            raise ValidationError({"payment": "Оплата не прошла"})
+    
+    
+        serializer.save(user=user)
 
     @action(detail=True, methods=['get'])
     def progress(self, request, pk=None):
