@@ -1,11 +1,12 @@
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters as f
-from ..services.PaymentService import PaymentService 
+from ..services import * 
 
 from ..services.course_progress import complete_lesson_service, get_course_progress
 
@@ -29,6 +30,28 @@ class CourseViewSet(ReadOnlyModelViewSet):
         if self.action == 'list':
             return CourseListSerializer
         return CourseDetailSerializer
+    
+    @action(methods=['get'], detail=True, url_path='enroll', url_name='make_enroll')
+    def make_enroll(self, request, *args, **kwargs):
+        course=self.get_object()
+        serializer=EnrollmentCreateSerializer(
+            data={"course": course.pk},
+            context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        result = EnrollmentService.create_enrollment(user=request.user, course=course)
+
+        # if not result["success"]:
+        #     raise ValidationError(result["error"])
+        
+        return Response (
+            {
+                "succes": True,
+                "course_id": course.pk,
+                "message": "Вы успешно записаны на курс."
+            }
+        )
+
 
 
 class LessonsViewSet(ReadOnlyModelViewSet):
@@ -93,3 +116,12 @@ class EnrollmentViewSet(ModelViewSet):
             return Response(data)
         except Exception as e:
             return Response({"error": str(e)}, status=400)
+        
+
+# class PaymentViewSet(APIView):
+#     """
+#     Представление для сервиса оплаты.
+#     """
+#     def post(self, request, *args, **kwargs):
+#         # data=request.data
+#         payment_service=PaymentService.make_a_payment()
