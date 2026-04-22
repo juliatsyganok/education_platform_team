@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'django_filters',
+    'drf_spectacular', #генерит swagger api
     # 'crispy_forms',
     'courses'
 ]
@@ -139,8 +140,20 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS':
         'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 5,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',  # ← Должна быть!
     ]
+
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'T1 Quests API',
+    'DESCRIPTION': 'Документация API',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'ENUM_NAME_OVERRIDES': {
+        'ValidationError': 'src.courses.exceptions.AlreadyEnrolledError',
+    },
 }
