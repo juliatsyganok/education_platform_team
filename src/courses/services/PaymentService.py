@@ -1,4 +1,4 @@
-from src.courses.exceptions import PaymentFailedError, InsufficientFundsError
+from ..exceptions import PaymentFailedError, InsufficientFundsError
 class PaymentService:
     @staticmethod
     def make_a_payment(cost, user_balance=None):

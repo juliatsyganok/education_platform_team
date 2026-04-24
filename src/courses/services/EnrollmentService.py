@@ -1,5 +1,5 @@
-from src.courses.exceptions import AlreadyEnrolledError, CourseNotPublishedError, SelfEnrollmentError
-from models import Enrollment
+from ..exceptions import AlreadyEnrolledError, CourseNotPublishedError, SelfEnrollmentError
+from ..models import Enrollment
 class EnrollmentService:
     @staticmethod
     def create_enrollment(user, course):
