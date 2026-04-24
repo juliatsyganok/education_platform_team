@@ -17,10 +17,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# SECRET_KEY = os.getenv('SECRET_KEY')
-SECRET_KEY = 'django-insecure-kjhsdfkjhsdfkjhsdfkjhsdfkjhsdfkjhsdfkjhsdfkjhsdfkjhsd'
-DEBUG = True
-# DEBUG = os.getenv('DEBUG') == 'True'
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,7 +32,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
 ALLOWED_HOSTS = []
 

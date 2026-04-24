@@ -45,7 +45,7 @@ class CourseListSerializer(serializers.ModelSerializer):
 class CourseDetailSerializer(serializers.ModelSerializer):
     lessons = LessonSerializer(many=True, read_only=True)
     author = serializers.CharField(source='author.user.username', read_only=True)
-    enrollment_url = serializers.SerializerMethodField()  # 👈 добавить
+    enrollment_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -89,22 +89,23 @@ class EnrollmentCreateSerializer(serializers.ModelSerializer):
         model = Enrollment
         fields = ['course']
 
-    def create(self, validated_data):
-        validated_data['user'] = self.context['request'].user
-        return Enrollment.objects.create(**validated_data)
-    
     def validate_course(self, value):
         if not value.published:
             raise serializers.ValidationError("Нельзя записаться на неопубликованный курс")
         return value
-    
+
     def validate(self, data):
         user = self.context['request'].user
         course = data.get('course')
-        
+
+        if hasattr(user, 'userprofile') and user.userprofile == course.author:
+            raise serializers.ValidationError({
+                'course': 'Автор курса не может записаться на свой курс'
+            })
+
         if Enrollment.objects.filter(user=user, course=course).exists():
             raise serializers.ValidationError({
                 'course': 'Вы уже записаны на этот курс'
             })
-        
+
         return data
